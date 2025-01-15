@@ -53,7 +53,7 @@ namespace Forum.Persistence.Repository
             if (post is null)
                 throw new ArgumentException("Item doesn't exist");
 
-            item.Adapt(post, typeof(User), typeof(User));
+            item.Adapt(post, typeof(Post), typeof(Post));
 
             return post;
         }
