@@ -1,11 +1,12 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace ChesnokForum.Auth
+namespace Forum.Application.Auth
 {
     public class AuthOptions
     {
-        public const string ISSUER = "ChesnokForum";
+        public const string ISSUER = "Forum.API";
         public const string AUDIENCE = "ForumUser";
         public const string KEY = "mysupersecret_secretsecretsecretkey!123";
         public static SymmetricSecurityKey GetSymmetricSecurityKey() =>
