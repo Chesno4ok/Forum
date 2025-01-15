@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forum.Persistence.Migrations
 {
     [DbContext(typeof(ForumContext))]
-    [Migration("20250113151243_init")]
-    partial class init
+    [Migration("20250115092453_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,35 @@ namespace Forum.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Forum.Logic.Models.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("Comments_pkey");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
+                });
 
             modelBuilder.Entity("Forum.Logic.Models.Post", b =>
                 {
@@ -38,20 +67,17 @@ namespace Forum.Persistence.Migrations
                     b.Property<DateTime>("PublicationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Tile")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("UserAuthorId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id")
                         .HasName("Posts_pkey");
 
-                    b.HasIndex("UserAuthorId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Posts");
                 });
@@ -81,22 +107,18 @@ namespace Forum.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Login")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
                     b.Property<byte[]>("Salt")
-                        .IsRequired()
                         .HasColumnType("bytea");
 
                     b.HasKey("Id")
@@ -107,13 +129,38 @@ namespace Forum.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Forum.Logic.Models.Comment", b =>
+                {
+                    b.HasOne("Forum.Logic.Models.Comment", "CommentNavigation")
+                        .WithMany("Replies")
+                        .HasForeignKey("CommentId")
+                        .HasConstraintName("Comment_Reply");
+
+                    b.HasOne("Forum.Logic.Models.Post", "PostNavigation")
+                        .WithMany("Comments")
+                        .HasForeignKey("CommentId")
+                        .HasConstraintName("Comment_Post");
+
+                    b.HasOne("Repository.Models.User", "UserNavigation")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("Comment_User");
+
+                    b.Navigation("CommentNavigation");
+
+                    b.Navigation("PostNavigation");
+
+                    b.Navigation("UserNavigation");
+                });
+
             modelBuilder.Entity("Forum.Logic.Models.Post", b =>
                 {
                     b.HasOne("Repository.Models.User", "UserNavigation")
                         .WithMany("Posts")
-                        .HasForeignKey("UserAuthorId")
+                        .HasForeignKey("UserId")
                         .IsRequired()
-                        .HasConstraintName("User_Role");
+                        .HasConstraintName("Post_User");
 
                     b.Navigation("UserNavigation");
                 });
@@ -129,6 +176,16 @@ namespace Forum.Persistence.Migrations
                     b.Navigation("RoleNavigation");
                 });
 
+            modelBuilder.Entity("Forum.Logic.Models.Comment", b =>
+                {
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Forum.Logic.Models.Post", b =>
+                {
+                    b.Navigation("Comments");
+                });
+
             modelBuilder.Entity("Repository.Models.Role", b =>
                 {
                     b.Navigation("Users");
@@ -136,6 +193,8 @@ namespace Forum.Persistence.Migrations
 
             modelBuilder.Entity("Repository.Models.User", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618

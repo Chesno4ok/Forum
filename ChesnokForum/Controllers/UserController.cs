@@ -6,6 +6,8 @@ using Repository.Models;
 using Mapster;
 using Forum.Application.Auth;
 using Forum.API.Attributes.ValidationAttriubtes;
+using Forum.Persistance;
+using Forum.Logic.Repository;
 
 
 namespace Forum.API.Controllers
@@ -52,16 +54,13 @@ namespace Forum.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetUser(Guid id)
+        public async Task<IActionResult> GetUser([IdValidation<UserRepository, User>] Guid id)
         {
-            if (_userService.GetUser(id) is null)
-                return BadRequest("User doesn't exist");
-
             return Ok((await _userService.GetUser(id)).Adapt<UserResponseDto>());
         }
 
         [HttpPut("update/{id:guid}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserUpdateDto userDto)
+        public async Task<IActionResult> UpdateUser([IdValidation<UserRepository, User>] Guid id, [FromBody] UserUpdateDto userDto)
         {
             if (_userService.GetUser(id) is null)
                 return BadRequest("User doesn't exist");
@@ -73,7 +72,7 @@ namespace Forum.API.Controllers
         }
 
         [HttpDelete("delete/{id:guid}")]
-        public async Task<IActionResult> DeleteUser( Guid id)
+        public async Task<IActionResult> DeleteUser([IdValidation<UserRepository, User>] Guid id)
         {
             if (_userService.GetUser(id) is null)
                 return BadRequest("User doesn't exist");

@@ -21,7 +21,7 @@ namespace Forum.API.Controllers
         private readonly AuthService _authService = authService;
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<IActionResult> Get([IdValidation<PostRepository, Post>] Guid id)
         {
             var post = await _postService.GetPost(id);
 
@@ -31,7 +31,7 @@ namespace Forum.API.Controllers
         [HttpGet("get_all")]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(_postService.GetAll().Result.Adapt<IEnumerable<PostResponseDto>>());
+            return Ok((await _postService.GetAll()).Adapt<IEnumerable<PostResponseDto>>());
         }
 
         [HttpPost("create")]
@@ -40,7 +40,7 @@ namespace Forum.API.Controllers
             var post = postDto.Adapt<Post>();
             post.Id = Guid.NewGuid();
             post.PublicationDate = DateTime.UtcNow;
-            post.UserAuthorId = Guid.Parse(_authService.GetId(HttpContext.Request.Headers.First(i => i.Key == "Authorization").Value));
+            post.UserId = Guid.Parse(_authService.GetId(HttpContext.Request.Headers.First(i => i.Key == "Authorization").Value));
 
 
             await _postService.Create(post);
@@ -56,7 +56,7 @@ namespace Forum.API.Controllers
         }
 
         [HttpDelete("delete/{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete([IdValidation<PostRepository, Post>] Guid id)
         {
             await _postService.Delete(id);
 

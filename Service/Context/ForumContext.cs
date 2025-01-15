@@ -20,6 +20,7 @@ public partial class ForumContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<Post> Posts { get; set; }
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Comment> Comments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -49,9 +50,32 @@ public partial class ForumContext : DbContext
             Entity.HasKey(e => e.Id).HasName("Posts_pkey");
 
             Entity.HasOne(d => d.UserNavigation).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.UserAuthorId)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("User_Role");
+                .HasConstraintName("Post_User");
+        });
+
+        modelBuilder.Entity<Comment>(Entity =>
+        {
+            Entity.HasKey(e => e.Id).HasName("Comments_pkey");
+
+            Entity.HasOne(d => d.PostNavigation).WithMany(p => p.Comments)
+                .HasForeignKey(d => d.CommentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Comment_Post");
+
+
+            Entity.HasOne(d => d.UserNavigation).WithMany(p => p.Comments)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Comment_User");
+
+            Entity.HasOne(d => d.CommentNavigation).WithMany(p => p.Replies)
+                .HasForeignKey(d => d.CommentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Comment_Reply");
+
+
         });
 
         OnModelCreatingPartial(modelBuilder);
