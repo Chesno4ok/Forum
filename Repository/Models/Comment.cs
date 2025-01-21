@@ -21,6 +21,7 @@ namespace Forum.Logic.Models
         public Guid? CommentId { get; set; }
         public virtual Comment? CommentNavigation { get; set; } = null!;
         public virtual ICollection<Comment> Replies { get; set; } = null!;
+        public virtual ICollection<File> Files { get; set; } = null!;
 
     }
 }

@@ -7,6 +7,5 @@ namespace Forum.API.DTO.Comments
         public Guid Id { get; set; }
         public Guid? CommentId { get; set; }
         public string Body { get; set; } = string.Empty;
-        public virtual ICollection<Comment> Replies { get; set; } = null!;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Forum.Logic.Models;
 using Microsoft.EntityFrameworkCore;
 using Repository.Models;
+using File = Forum.Logic.Models.File;
 
 namespace Forum.Persistance;
 
@@ -15,12 +16,14 @@ public partial class ForumContext : DbContext
     public ForumContext(DbContextOptions<ForumContext> options)
         : base(options)
     {
+        
     }
 
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<Post> Posts { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Comment> Comments { get; set; }
+    public virtual DbSet<File> Files { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -61,7 +64,7 @@ public partial class ForumContext : DbContext
             Entity.HasKey(e => e.Id).HasName("Comments_pkey");
 
             Entity.HasOne(d => d.PostNavigation).WithMany(p => p.Comments)
-                .HasForeignKey(d => d.CommentId)
+                .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Comment_Post");
 
@@ -75,8 +78,26 @@ public partial class ForumContext : DbContext
                 .HasForeignKey(d => d.CommentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Comment_Reply");
+        });
 
+        modelBuilder.Entity<File>(Entity =>
+        {
+            Entity.HasKey(e => e.Id).HasName("Files_pkey");
 
+            Entity.HasOne(d => d.PostNavigation).WithMany(p => p.Files)
+                .HasForeignKey(d => d.PostId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("File_Post");
+
+            Entity.HasOne(d => d.CommentNavigation).WithMany(p => p.Files)
+                .HasForeignKey(d => d.CommentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("File_Comment");
+
+            Entity.HasOne(d => d.UserNavigation).WithMany(p => p.Files)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("File_User");
         });
 
         OnModelCreatingPartial(modelBuilder);

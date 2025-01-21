@@ -22,7 +22,7 @@ namespace Forum.API.Attributes.ValidationAttriubtes
             Guid? guid = (Guid?)value;
 
             if (guid is null)
-                throw new ArgumentException("Value is not GUID");
+                return new ValidationResult("Id is not guid", new string[] { "Id" });
 
             var item = repository.Get((Guid)guid).Result;
 

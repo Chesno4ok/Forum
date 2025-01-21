@@ -47,8 +47,7 @@ namespace Forum.Persistence.Repository
         public async Task<IEnumerable<Comment>> GetCommentsByPostId(Guid postId)
         {
             return _forumContext.Comments
-                .Include(i => i.Replies)
-                .Where(i => i.PostId == postId && i.CommentId == null);
+                .Where(i => i.PostId == postId);
         }
 
         public async Task Save()
@@ -62,6 +61,12 @@ namespace Forum.Persistence.Repository
 
             if (comment is null)
                 throw new ArgumentException("Item doesn't exist");
+
+            var conf = TypeAdapterConfig<Comment, Comment>.NewConfig()
+                .IgnoreIf((src, dest) => src.UserId == Guid.Empty, dest => dest.UserId)
+                .IgnoreIf((src, dest) => src.PostId == Guid.Empty, dest => dest.PostId)
+                .IgnoreNullValues(true)
+                .BuildAdapter().Config;
 
             item.Adapt(comment, typeof(Comment), typeof(Comment));
 

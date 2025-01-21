@@ -13,5 +13,6 @@ namespace Repository.Models
         public virtual Role RoleNavigation { get; set; } = null!;
         public virtual ICollection<Post> Posts { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = null!;
+        public virtual ICollection<Forum.Logic.Models.File> Files { get; set; } = null!;
     }
 }

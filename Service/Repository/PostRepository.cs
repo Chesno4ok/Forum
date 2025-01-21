@@ -53,7 +53,13 @@ namespace Forum.Persistence.Repository
             if (post is null)
                 throw new ArgumentException("Item doesn't exist");
 
-            item.Adapt(post, typeof(Post), typeof(Post));
+            var conf = TypeAdapterConfig<Post, Post>.NewConfig()
+                .IgnoreIf((src, dest) => src.PublicationDate == DateTime.MinValue, dest => dest.PublicationDate)
+                .IgnoreIf((src, dest) => src.UserId == Guid.Empty, dest => dest.UserId)
+                .IgnoreNullValues(true)
+                .BuildAdapter().Config;
+
+            item.Adapt(post, typeof(Post), typeof(Post), conf);
 
             return post;
         }

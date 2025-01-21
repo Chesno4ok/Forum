@@ -1,6 +1,7 @@
 ﻿using Forum.API.Attributes.ValidationAttriubtes;
 using Forum.API.DTO;
 using Forum.API.DTO.Comments;
+using Forum.Application.Auth;
 using Forum.Application.DatabaseService;
 using Forum.Logic.Models;
 using Forum.Logic.Repository;
@@ -16,9 +17,10 @@ namespace Forum.API.Controllers
     [Route("api/comment")]
     [ApiController]
     [Authorize]
-    public class CommentController(CommentService commentService) : ControllerBase
+    public class CommentController(CommentService commentService, AuthService authService) : ControllerBase
     {
         private readonly CommentService _commentSerivce = commentService;
+        private readonly AuthService _authService = authService;
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetComment([IdValidation<CommentRepository, Comment>] Guid id)
@@ -26,7 +28,7 @@ namespace Forum.API.Controllers
             return Ok(_commentSerivce.GetComment(id).Result.Adapt<CommentResponseDto>());
         }
 
-        [HttpGet("get_by_post")]
+        [HttpGet("get_by_post/{postId:guid}")]
         public async Task<IActionResult> GetByPost([IdValidation<PostRepository, Post>] Guid postId)
         {
             return Ok(_commentSerivce.GetCommentsById(postId).Result.Adapt<IEnumerable<CommentResponseDto>>());
@@ -37,6 +39,8 @@ namespace Forum.API.Controllers
         {
             var comment = commentDto.Adapt<Comment>();
             comment.Id = Guid.NewGuid();
+            comment.UserId = Guid.Parse(_authService.GetId(HttpContext.Request.Headers.First(i => i.Key == "Authorization").Value));
+
 
             await _commentSerivce.CreateComment(comment);
             return Ok(comment.Adapt<CommentResponseDto>());

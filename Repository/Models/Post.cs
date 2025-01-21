@@ -16,5 +16,6 @@ namespace Forum.Logic.Models
         public Guid UserId { get; set; }
         public virtual User UserNavigation { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = null!;
+        public virtual ICollection<File> Files { get; set; } = null!;
     }
 }

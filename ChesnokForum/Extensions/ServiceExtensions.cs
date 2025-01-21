@@ -4,6 +4,13 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Forum.Application.Auth;
 using Microsoft.IdentityModel.Tokens;
+using Forum.Application.DatabaseService;
+using Forum.Persistance;
+using Forum.Persistence.Repository;
+using Forum.Logic.Repository;
+using Repository.Models;
+using Forum.Logic.Models;
+using File = Forum.Logic.Models.File;
 
 namespace Forum.API.Extensions
 {
@@ -85,5 +92,23 @@ namespace Forum.API.Extensions
             
             services.AddAuthorization();
         }
+
+        public static void AddServices(this IServiceCollection services)
+        {
+            services.AddTransient<UserService>();
+            services.AddTransient<PostService>();
+            services.AddTransient<CommentService>();
+            services.AddTransient<FileService>();
+            services.AddTransient<AuthService>();
+        }
+
+        public static void AddRepositories(this IServiceCollection services)
+        {
+            services.AddTransient<IUserRepository<User>, UserRepository>();
+            services.AddTransient<IPostRepository<Post>, PostRepository>();
+            services.AddTransient<ICommentRepository<Comment>,  CommentRepository>();
+            services.AddTransient<IFileRepository<File>, FileRepository>();
+        }
+
     }
 }

@@ -9,12 +9,16 @@ using Mapster;
 using System.Security.Cryptography;
 using Forum.Logic.Repository;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
+using NuGet.Protocol;
 
 namespace Forum.Application.DatabaseService
 {
-    public class UserService(IUserRepository<User> userRpository) : IDisposable
+    public class UserService(IUserRepository<User> userRpository, IDistributedCache cache) : IDisposable
     {
         private readonly IUserRepository<User> _userRepository = userRpository;
+        private readonly IDistributedCache _cache = cache;
 
         public void Dispose()
         {
@@ -62,7 +66,27 @@ namespace Forum.Application.DatabaseService
 
         public async Task<User?> GetUser(Guid guid)
         {
-            return await _userRepository.Get(guid);
+            var userString = await _cache.GetStringAsync(guid.ToString());
+            User? user = null;
+
+            if (userString != null)
+            {
+                user = JsonConvert.DeserializeObject<User>(userString);
+                
+            }
+            else
+            {
+                user =  await _userRepository.Get(guid);
+
+                userString = user.ToJson();
+                await cache.SetStringAsync(user.Id.ToString(), userString, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+
+            }
+
+            return user;
         }
 
         public async Task<User?> GetUser(string login)

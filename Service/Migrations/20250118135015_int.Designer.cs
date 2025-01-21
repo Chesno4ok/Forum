@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forum.Persistence.Migrations
 {
     [DbContext(typeof(ForumContext))]
-    [Migration("20250115092453_Init")]
-    partial class Init
+    [Migration("20250118135015_int")]
+    partial class @int
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,9 +49,46 @@ namespace Forum.Persistence.Migrations
 
                     b.HasIndex("CommentId");
 
+                    b.HasIndex("PostId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Forum.Logic.Models.File", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Binary")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid?>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id")
+                        .HasName("Files_pkey");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Forum.Logic.Models.Post", b =>
@@ -138,7 +175,8 @@ namespace Forum.Persistence.Migrations
 
                     b.HasOne("Forum.Logic.Models.Post", "PostNavigation")
                         .WithMany("Comments")
-                        .HasForeignKey("CommentId")
+                        .HasForeignKey("PostId")
+                        .IsRequired()
                         .HasConstraintName("Comment_Post");
 
                     b.HasOne("Repository.Models.User", "UserNavigation")
@@ -146,6 +184,32 @@ namespace Forum.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .IsRequired()
                         .HasConstraintName("Comment_User");
+
+                    b.Navigation("CommentNavigation");
+
+                    b.Navigation("PostNavigation");
+
+                    b.Navigation("UserNavigation");
+                });
+
+            modelBuilder.Entity("Forum.Logic.Models.File", b =>
+                {
+                    b.HasOne("Forum.Logic.Models.Comment", "CommentNavigation")
+                        .WithMany("Files")
+                        .HasForeignKey("CommentId")
+                        .HasConstraintName("File_Comment");
+
+                    b.HasOne("Forum.Logic.Models.Post", "PostNavigation")
+                        .WithMany("Files")
+                        .HasForeignKey("PostId")
+                        .IsRequired()
+                        .HasConstraintName("File_Post");
+
+                    b.HasOne("Repository.Models.User", "UserNavigation")
+                        .WithMany("Files")
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("File_User");
 
                     b.Navigation("CommentNavigation");
 
@@ -178,12 +242,16 @@ namespace Forum.Persistence.Migrations
 
             modelBuilder.Entity("Forum.Logic.Models.Comment", b =>
                 {
+                    b.Navigation("Files");
+
                     b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("Forum.Logic.Models.Post", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("Repository.Models.Role", b =>
@@ -194,6 +262,8 @@ namespace Forum.Persistence.Migrations
             modelBuilder.Entity("Repository.Models.User", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Files");
 
                     b.Navigation("Posts");
                 });

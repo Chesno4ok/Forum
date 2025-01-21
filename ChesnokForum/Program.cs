@@ -21,17 +21,20 @@ namespace Forum.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            
+
+            builder.AddRedisOutputCache("RedisCache");
+
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
             builder.Services.ConfigureSwagger();
             builder.Services.ConfigureAuth();
 
-            builder.Services.AddTransient<UserService>(i => new UserService(new UserRepository()));
-            builder.Services.AddTransient<PostService>(i => new PostService(new PostRepository()));
-            builder.Services.AddTransient<CommentService>(i => new CommentService(new CommentRepository()));
-            builder.Services.AddTransient<AuthService>();
+            builder.Services.AddServices();
+            builder.Services.AddRepositories();
 
+            builder.AddRedisDistributedCache(connectionName: "cache");
+
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
 
