@@ -3,18 +3,23 @@ using Forum.Logic.Repository;
 using Forum.Persistance;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 using Repository.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NuGet.Protocol;
 
 namespace Forum.Persistence.Repository
 {
-    public class PostRepository : IPostRepository<Post>
+    public class PostRepository(ForumContext forumContext, IDistributedCache cache) : IPostRepository<Post>
     {
-        ForumContext _forumContext = new ForumContext();
+        private readonly ForumContext _forumContext = forumContext;
+        private readonly IDistributedCache _cache = cache;
+
 
         public async Task Create(Post item)
         {
@@ -33,13 +38,36 @@ namespace Forum.Persistence.Repository
 
         public async Task<Post?> Get(Guid id)
         {
-            return await _forumContext.Posts.FirstOrDefaultAsync(i => i.Id == id);
+            var postString = await _cache.GetStringAsync($"post-{id.ToString()}");
+            Post? post = null;
+
+            if (postString != null)
+            {
+                post = JsonConvert.DeserializeObject<Post>(postString);
+            }
+            else
+            {
+                post = await _forumContext.Posts.FirstOrDefaultAsync(i => i.Id == id);
+
+                if (post is null)
+                    return null;
+
+                postString = post.ToJson();
+
+                await cache.SetStringAsync($"post-{post.Id.ToString()}", postString, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            }
+
+            return post;
         }
 
         public async Task<IEnumerable<Post>> GetAll()
         {
             return _forumContext.Posts;
         }
+
 
         public async Task Save()
         {

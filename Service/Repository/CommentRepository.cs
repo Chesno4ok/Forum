@@ -3,6 +3,9 @@ using Forum.Logic.Repository;
 using Forum.Persistance;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
+using NuGet.Protocol;
 using Repository.Models;
 using System;
 using System.Collections.Generic;
@@ -12,9 +15,10 @@ using System.Threading.Tasks;
 
 namespace Forum.Persistence.Repository
 {
-    public class CommentRepository : ICommentRepository<Comment>
+    public class CommentRepository(ForumContext forumContext, IDistributedCache cache) : ICommentRepository<Comment>
     {
-        public ForumContext _forumContext = new ForumContext();
+        private readonly ForumContext _forumContext = forumContext;
+        private readonly IDistributedCache _cache = cache;
 
         public async Task Create(Comment item)
         {
@@ -31,11 +35,31 @@ namespace Forum.Persistence.Repository
             _forumContext.Dispose();
         }
 
-        public Task<Comment?> Get(Guid id)
+        public async Task<Comment?> Get(Guid id)
         {
-            return _forumContext.Comments
-                .Include(i => i.Replies)
-                .FirstOrDefaultAsync(i => i.Id == id);
+            var commentString = await _cache.GetStringAsync($"comment-{id.ToString()}");
+            Comment? comment = null;
+
+            if (commentString != null)
+            {
+                comment = JsonConvert.DeserializeObject<Comment>(commentString);
+            }
+            else
+            {
+                comment = await _forumContext.Comments.FirstOrDefaultAsync(i => i.Id == id);
+
+                if (comment is null)
+                    return null;
+
+                commentString = comment.ToJson();
+
+                await cache.SetStringAsync($"comment-{comment.Id.ToString()}", commentString, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            }
+
+            return comment;
         }
 
         public async Task<IEnumerable<Comment>> GetAll()

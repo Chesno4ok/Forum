@@ -13,7 +13,7 @@ namespace Forum.Application.DatabaseService
     {
         private readonly ICommentRepository<Comment> _commentRepository = commentRepository;
 
-        public async Task<Comment> GetComment(Guid id)
+        public async Task<Comment?> GetComment(Guid id)
         => await _commentRepository.Get(id);
 
         public async Task UpdateComment(Comment comment)

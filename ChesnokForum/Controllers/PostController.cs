@@ -25,7 +25,7 @@ namespace Forum.API.Controllers
         {
             var post = await _postService.GetPost(id);
 
-            return post is null ? Ok(post.Adapt<PostResponseDto>()) : BadRequest("Post doesn;t exist");
+            return Ok(post.Adapt<PostResponseDto>());
         }
 
         [HttpGet("get_all")]

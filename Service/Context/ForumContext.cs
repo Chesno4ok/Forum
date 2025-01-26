@@ -25,10 +25,10 @@ public partial class ForumContext : DbContext
     public virtual DbSet<Comment> Comments { get; set; }
     public virtual DbSet<File> Files { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseNpgsql("Host=193.124.44.234;Port=5432;Database=Forum2;Username=postgres;Password=df23H3FsgL");
-    }
+    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    //{
+    //    optionsBuilder.UseNpgsql("Host=193.124.44.234;Port=5432;Database=Forum2;Username=postgres;Password=df23H3FsgL");
+    //}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

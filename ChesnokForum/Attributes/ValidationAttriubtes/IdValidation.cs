@@ -3,6 +3,7 @@ using Forum.Logic.Models;
 using Forum.Logic.Repository;
 using Forum.Persistance;
 using Forum.Persistence.Repository;
+using Microsoft.Extensions.Caching.Distributed;
 using Repository.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Remoting;
@@ -14,7 +15,9 @@ namespace Forum.API.Attributes.ValidationAttriubtes
     {
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            var repository = Activator.CreateInstance(typeof(R)) as IRepository<O>;
+
+            var repository = Activator.CreateInstance(typeof(R), validationContext.GetService<ForumContext>(),
+                validationContext.GetService<IDistributedCache>()) as IRepository<O>;
 
             if (repository is null)
                 throw new ArgumentException("Couldn't create repository");

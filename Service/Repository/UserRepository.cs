@@ -4,14 +4,19 @@ using Mapster;
 using NuGet.Protocol;
 using Forum.Logic.Repository;
 using Microsoft.EntityFrameworkCore;
+using Forum.Logic.Models;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 
 
 namespace Forum.Persistance
 {
-    public class UserRepository : IUserRepository<User>
+    public class UserRepository(ForumContext forumContext, IDistributedCache cache) : IUserRepository<User>
     {
-        private ForumContext _forumContext = new ForumContext();
+        private readonly ForumContext _forumContext = forumContext;
+        private readonly IDistributedCache _cache = cache;
+
         public async Task Create(User user)
         {
             await _forumContext.Users.AddAsync(user);
@@ -22,18 +27,37 @@ namespace Forum.Persistance
         {
             var user = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == id);
 
-            if (user is null)
-                throw new ArgumentException("User doesn't exist");
+            if (await _cache.GetAsync($"user-{id.ToString()}") is not null)
+                await _cache.RemoveAsync($"{user}-{id.ToString()}");
 
             _forumContext.Users.Remove(user);
         }
 
         public async Task<User?> Get(Guid id)
         {
-            var user = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == id);
+            var jsonString = await _cache.GetStringAsync($"user-{id.ToString()}");
+            User? post = null;
 
+            if (jsonString != null)
+            {
+                post = JsonConvert.DeserializeObject<User>(jsonString);
+            }
+            else
+            {
+                post = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == id);
 
-            return user;
+                if (post is null)
+                    return null;
+
+                jsonString = post.ToJson();
+
+                await cache.SetStringAsync($"user-{post.Id.ToString()}", jsonString, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            }
+
+            return post;
         }
 
         public async Task Save()
@@ -45,15 +69,15 @@ namespace Forum.Persistance
         {
             var user = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == newUser.Id);
 
-            if (user is null)
-                throw new ArgumentException("User doesn't exist");
-
             var conf = TypeAdapterConfig<User, User>.NewConfig()
                 .IgnoreIf((src, dest) => src.RoleId == 0, dest => dest.RoleId)
                 .IgnoreNullValues(true)
                 .BuildAdapter().Config;
 
             newUser.Adapt(user, typeof(User), typeof(User), conf);
+
+            if (await _cache.GetAsync($"user-{user.Id.ToString()}") is not null)
+                await _cache.SetStringAsync($"user-{user.Id.ToString()}", user.ToJson());
 
             return user;
         }

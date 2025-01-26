@@ -32,6 +32,8 @@ namespace Forum.API
             builder.Services.AddServices();
             builder.Services.AddRepositories();
 
+            builder.AddNpgsqlDbContext<ForumContext>("postgres");
+
             builder.AddRedisDistributedCache(connectionName: "cache");
 
             builder.Services.AddHttpContextAccessor();

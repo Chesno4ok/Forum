@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.0.0" />
     <PackageReference Include="Aspire.StackExchange.Redis.OutputCaching" Version="9.0.0" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
