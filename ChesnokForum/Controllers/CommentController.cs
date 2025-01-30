@@ -49,8 +49,8 @@ namespace Forum.API.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateComment(CommentUpdateDto commentDto)
         {
-            await _commentSerivce.UpdateComment(commentDto.Adapt<Comment>());
-            return Ok();
+            var newComment = await _commentSerivce.UpdateComment(commentDto.Adapt<Comment>());
+            return Ok(newComment.Adapt<CommentResponseDto>());
         }
 
         [HttpDelete("{id:guid}")]

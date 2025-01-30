@@ -14,7 +14,7 @@ using Forum.Persistence.Repository;
 
 namespace Forum.API
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
@@ -34,7 +34,7 @@ namespace Forum.API
 
             builder.AddNpgsqlDbContext<ForumContext>("postgres");
 
-            builder.AddRedisDistributedCache(connectionName: "cache");
+            builder.AddRedisDistributedCache("cache");
 
             builder.Services.AddHttpContextAccessor();
 

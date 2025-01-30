@@ -12,9 +12,9 @@ using File = Forum.Logic.Models.File;
 
 namespace Forum.Persistence.Repository
 {
-    public class FileRepository : IFileRepository<File>
+    public class FileRepository(ForumContext forumContext) : IFileRepository<File>
     {
-        private readonly ForumContext _forumContext = new ForumContext();
+        private readonly ForumContext _forumContext = forumContext;
 
         public async Task Create(File item)
         {

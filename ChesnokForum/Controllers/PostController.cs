@@ -50,9 +50,9 @@ namespace Forum.API.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> Update(PostUpdateDto postDto)
         {
-            await _postService.Update(postDto.Adapt<Post>());
+            var newPost = await _postService.Update(postDto.Adapt<Post>());
 
-            return Ok();
+            return Ok(newPost.Adapt<PostResponseDto>());
         }
 
         [HttpDelete("delete/{id:guid}")]

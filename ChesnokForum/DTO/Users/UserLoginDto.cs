@@ -18,6 +18,7 @@ namespace Forum.API.DTO.Users
             if (userService.GetUser(Login).Result is null)
             {
                 yield return new ValidationResult("Login doesn't exist", new string[] { "Login" });
+                yield break;
             }
 
             if(userService.LoginUser(Login, Password).Result is null)

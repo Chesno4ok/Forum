@@ -7,6 +7,7 @@ namespace Forum.API.DTO
     public class CommentCreationDto : IValidatableObject
     {
         public Guid PostId { get; set; }
+        [StringLength(maximumLength: 256, MinimumLength = 1)]
         public string Body { get; set; } = string.Empty;
         public Guid? CommentId { get; set; }
 

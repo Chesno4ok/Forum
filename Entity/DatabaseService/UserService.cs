@@ -36,6 +36,13 @@ namespace Forum.Application.DatabaseService
 
             return user;
         }
+        
+        public async Task<string?> LoginAnon(User user)
+        {
+            var jwt = Auth.AuthService.CreateToken(user.Id);
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
+        }
+
         public async Task<string?> LoginUser(string login, string password)
         {
             var user = await _userRepository.Get(login);

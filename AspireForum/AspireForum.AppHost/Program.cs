@@ -10,8 +10,7 @@ var cache = builder.AddRedis("cache", 6379)
     .WithRedisInsight();
 
 // Postgres
-var postgres = builder.AddPostgres("postgres", port: 5432).WithPgAdmin();
-
+var postgres = builder.AddPostgres("postgres", port: 5432);
 var postgresdb = postgres.AddDatabase("postgresDb");
 
 

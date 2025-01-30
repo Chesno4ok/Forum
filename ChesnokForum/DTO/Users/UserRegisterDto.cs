@@ -11,15 +11,15 @@ namespace Forum.API.DTO.Users
     public class UserRegisterDto : IValidatableObject
     {
         [Required]
-        [StringLength(32, MinimumLength = 3)]
+        [StringLength(64, MinimumLength = 3)]
         public string Login { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(32, MinimumLength = 3)]
+        [StringLength(64, MinimumLength = 3)]
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(32, MinimumLength = 5)]
+        [StringLength(64, MinimumLength = 5)]
         public string Password { get; set; } = string.Empty;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -42,6 +42,22 @@ namespace Forum.API.Controllers
             return Ok((await _userService.RegisterUser(user)).Adapt<UserResponseDto>());
         }
 
+        [HttpPost("login_anon")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginAnon()
+        {
+            var user = await _userService.RegisterUser(new User()
+            {
+                Id = Guid.NewGuid(),
+                RoleId = 1
+            });
+
+            var userDto = user.Adapt<UserTokenDto>();
+            userDto.Token = await _userService.LoginAnon(user);
+
+            return Ok(userDto);
+        }
+
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginUser(UserLoginDto userLogin)
@@ -59,14 +75,10 @@ namespace Forum.API.Controllers
             return Ok((await _userService.GetUser(id)).Adapt<UserResponseDto>());
         }
 
-        [HttpPut("update/{id:guid}")]
-        public async Task<IActionResult> UpdateUser([IdValidation<UserRepository, User>] Guid id, [FromBody] UserUpdateDto userDto)
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userDto)
         {
-            if (_userService.GetUser(id) is null)
-                return BadRequest("User doesn't exist");
-
             User user = userDto.Adapt<User>();
-            user.Id = id;
 
             return Ok((await _userService.UpdateUser(user)).Adapt<UserResponseDto>());
         }

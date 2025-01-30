@@ -29,10 +29,11 @@ namespace Forum.Application.DatabaseService
             await _postRepository.Save();
             return post;
         }
-        public async Task Update(Post post)
+        public async Task<Post> Update(Post post)
         {
-            await _postRepository.Update(post);
+            var newPost = await _postRepository.Update(post);
             await _postRepository.Save();
+            return newPost;
         }
         public async Task Delete(Guid id)
         {

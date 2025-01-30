@@ -16,10 +16,12 @@ namespace Forum.Application.DatabaseService
         public async Task<Comment?> GetComment(Guid id)
         => await _commentRepository.Get(id);
 
-        public async Task UpdateComment(Comment comment)
+        public async Task<Comment> UpdateComment(Comment comment)
         {
-            await _commentRepository.Update(comment);
+            var newComment = await _commentRepository.Update(comment);
             await _commentRepository.Save();
+
+            return newComment;
         }
 
         public async Task CreateComment(Comment comment)
