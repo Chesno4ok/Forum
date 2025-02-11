@@ -1,0 +1,66 @@
+﻿@page "/forum"
+@using Forum.API.DTO.Posts
+@using Forum.Frontend.Services
+@using Forum.Logic.Models
+@using Newtonsoft.Json
+@inject ICookie Cookie
+@inject IHttpClientFactory ClientFactory
+@rendermode RenderMode.InteractiveServer
+
+<h3>ForumPage</h3>
+<div>@token</div>
+<button onclick="@CreatePost">Create post</button>
+
+@foreach(var post in @posts){
+    <div>
+        @post.Tile
+    </div>
+}
+
+@code {
+    private string token = "";
+    private HttpClient client;
+    private List<PostResponseDto>? posts { get; set; } = new List<PostResponseDto>();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        token = await Cookie.GetValue("Authorization");
+        client = ClientFactory.CreateClient("backend");
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+        posts.Clear();
+        GetAllPosts();
+
+        await base.OnParametersSetAsync();
+    }
+
+    private void GetAllPosts(){
+
+        var response =  client.GetAsync("api/post/get_all").Result;
+
+        var json =  response.Content.ReadAsStringAsync().Result;
+        var posts = JsonConvert.DeserializeObject<PostResponseDto[]>(json);
+
+        this.posts = new List<PostResponseDto>(posts);
+    }
+
+    public async Task CreatePost(){
+        
+        var response = await client.PostAsJsonAsync<PostCreationDto>("api/post/create", new PostCreationDto()
+            {
+                Tile = "Post Tite",
+                Body = "Body fdasdsfsdfasdaf"
+            });
+
+            var sdfdsf = response.Content.ReadAsStringAsync();
+
+
+    }
+
+}

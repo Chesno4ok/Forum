@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ChesnokForum\Forum.API.csproj" />
+    <ProjectReference Include="..\..\Forum.Frontend\Forum.Frontend\Forum.Frontend.csproj" />
     <ProjectReference Include="..\..\Forum.MigrationService\Forum.MigrationService.csproj" />
   </ItemGroup>
 

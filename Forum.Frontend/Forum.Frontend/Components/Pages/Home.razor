@@ -1,0 +1,40 @@
+﻿@page "/"
+@using Forum.API.DTO.Users
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+@rendermode RenderMode.InteractiveServer
+
+@code {
+    public EventCallback<string> navigateTo;
+    private bool isLogin;
+    HttpClient httpClient;
+
+    
+
+    protected override void OnInitialized()
+    {
+        try{
+            NavigationManager.NavigateTo("/login");
+        }catch{
+
+        }
+    }
+
+    public void NavigateTo(string value){
+
+        NavigationManager.NavigateTo("/login");
+    }
+
+    public async Task OnLogin(UserTokenDto token)
+    {
+        NavigationManager.NavigateTo("/forum");
+    }
+
+    private bool IsLogin()
+    {
+
+        return httpClient.GetAsync("api/user/isLogin").Result.IsSuccessStatusCode;
+
+        
+    }
+}

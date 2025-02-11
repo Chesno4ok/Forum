@@ -89,7 +89,17 @@ namespace Forum.Persistence.Repository
 
             item.Adapt(post, typeof(Post), typeof(Post), conf);
 
+
+            if(await _cache.GetStringAsync($"post-{item.Id.ToString()}") is not null)
+            {
+                await _cache.SetStringAsync($"post-{item.Id.ToString()}", post.ToJson());
+            }
+
             return post;
+
+            
+
+
         }
     }
 }

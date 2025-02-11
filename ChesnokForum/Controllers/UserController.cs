@@ -49,7 +49,7 @@ namespace Forum.API.Controllers
             var user = await _userService.RegisterUser(new User()
             {
                 Id = Guid.NewGuid(),
-                RoleId = 1
+                RoleId = 2
             });
 
             var userDto = user.Adapt<UserTokenDto>();
@@ -74,6 +74,9 @@ namespace Forum.API.Controllers
         {
             return Ok((await _userService.GetUser(id)).Adapt<UserResponseDto>());
         }
+
+        [HttpGet("/isLogin")]
+        public IActionResult IsLogin() => Ok();
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userDto)

@@ -94,6 +94,11 @@ namespace Forum.Persistence.Repository
 
             item.Adapt(comment, typeof(Comment), typeof(Comment));
 
+            if (await _cache.GetStringAsync($"comment-{item.Id.ToString()}") is not null)
+            {
+                await _cache.SetStringAsync($"comment-{item.Id.ToString()}", comment.ToJson());
+            }
+
             return comment;
         }
     }

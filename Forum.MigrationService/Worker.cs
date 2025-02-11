@@ -1,3 +1,4 @@
+using Forum.Logic.Models;
 using Forum.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -50,9 +51,16 @@ public class Worker(
         {
             // Create the database if it does not exist.
             // Do this first so there is then a database to start a transaction against.
-            if (!await dbCreator.ExistsAsync(cancellationToken))
+            try
             {
-                await dbCreator.CreateAsync(cancellationToken);
+                if (!await dbCreator.ExistsAsync(cancellationToken))
+                {
+                    await dbCreator.CreateAsync(cancellationToken);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         });
 

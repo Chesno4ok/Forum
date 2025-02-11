@@ -1,0 +1,113 @@
+﻿@page "/register"
+@using System.ComponentModel.DataAnnotations
+@using Forum.Frontend.Models
+@using NuGet.Protocol
+@rendermode RenderMode.InteractiveServer
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<style>
+    .mud-paper{
+    padding: 10px;
+    }
+</style>
+
+<h1 class="h-100 d-flex p-2 align-items-center justify-content-center">Chesnok Forum</h1>
+<MudGrid Justify="Justify.Center" >
+    <MudItem>
+        <MudPaper Elevation="1">
+            <MudText Align="Align.Center" Typo="Typo.h5">Please Sign Up</MudText>
+
+            <MudTextField @bind-Value="registerDto.Name"
+            For="@(() => registerDto.Name)"
+            Immediate="true"
+            Label="Name"
+            HelperText="Enter your name"
+            class="d-flex p-2" />
+
+            <MudTextField Align="Align.Center" @bind-Value="registerDto.Login"
+            AdornmentIcon="@Icons.Material.Filled.Login"
+            For="@(() => registerDto.Login)"
+            Immediate="true"
+            Label="Login"
+            HelperText="Enter login"
+            class="d-flex p-2" />
+            <MudTextField @bind-Value="registerDto.Password"
+            InputType="InputType.Password"
+            For="@(() => registerDto.Password)"
+            Immediate="true"
+            Label="Password"
+            HelperText="Enter password"
+            class="d-flex p-2" />
+
+
+
+            <div Align="center">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Login" Color="Color.Primary" OnClick="@Submit">
+                    @if (processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Loading</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Sign up</MudText>
+                    }
+                </MudButton>
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Secondary" OnClick="@ToLogin">Return</MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem>
+
+    </MudItem>
+    <MudItem>
+
+    </MudItem>
+</MudGrid>
+
+@code {
+    private Models.UserRegisterDto registerDto = new();
+    private List<ValidationResult> valResults = new();
+    private string status = "";
+    private bool processing = false;
+
+    private async Task Submit()
+    {
+        processing = true;
+        try{
+            ValidationContext validationContext = new(registerDto);
+            valResults.Clear();
+            status = "";
+
+            if (Validator.TryValidateObject(registerDto, validationContext, valResults, true))
+            {
+                var client = ClientFactory.CreateClient("backend");
+                var response = await client.PostAsync("api/user/register",
+                new StringContent(registerDto.ToJson(), System.Text.Encoding.UTF8, "application/json"));
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    status = await response.Content.ReadAsStringAsync() + response.StatusCode;
+                    Snackbar.Add("Error");
+                    return;
+                }
+
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                
+            }
+        }
+        finally{
+            processing = false;
+        }
+        
+    }
+
+    private async Task ToLogin(){
+        NavigationManager.NavigateTo("/login");
+    }
+}

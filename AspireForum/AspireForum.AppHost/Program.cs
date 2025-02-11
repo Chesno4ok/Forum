@@ -32,4 +32,20 @@ builder.AddProject<Projects.Forum_MigrationService>("forum-migrationservice")
 
 // etc
 
+// etc
+
+
+
+
+// etc
+
+builder.AddProject<Projects.Forum_Frontend>("forum-frontend");
+
+// etc
+
+
+
+
+// etc
+
 builder.Build().Run();

@@ -1,0 +1,111 @@
+﻿@using Forum.API.DTO.Users
+@using Forum.Frontend.Models
+@using Forum.Frontend.Services
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using Newtonsoft.Json
+@using NuGet.Protocol
+@using System.Text
+@page "/login"
+@rendermode RenderMode.InteractiveServer
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+@using FluentValidation
+@inject ISnackbar Snackbar
+@inject ICookie Cookie;
+<h1 class="h-100 d-flex p-2 align-items-center justify-content-center">Chesnok Forum</h1>
+
+<style>
+    .mud-paper {
+    padding: 10px;
+    }
+</style>
+
+<MudGrid Justify="Justify.Center" >
+    <MudItem>
+        <MudPaper Elevation="1">
+            <MudText Align="Align.Center" Typo="Typo.h5">Please Sign In</MudText>
+            <MudTextField Align="Align.Center" @bind-Value="loginDto.Login"
+            AdornmentIcon="@Icons.Material.Filled.Login"
+            For="@(() => loginDto.Login)"
+            Immediate="true"
+            Label="Login"
+            Clearable="true"
+            HelperText="Enter login"
+            class="d-flex p-2" />
+
+            <MudTextField @bind-Value="loginDto.Password"
+            HelperText="Enter password"
+            InputType="InputType.Password"
+            For="@(() => loginDto.Password)"
+            Immediate="true"
+            Label="Password"
+            class="d-flex p-2" />
+            @if(!string.IsNullOrEmpty(errorMessage)){
+                <MudAlert Typo="Typo.subtitle2" Severity="MudBlazor.Severity.Error">@errorMessage</MudAlert>
+            }
+            <div Align="center">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Login" Color="Color.Primary" OnClick="@Submit">
+                    @if(processing){
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Loading</MudText>
+                    }else{
+                        <MudText>Sign in</MudText>
+                    }
+                </MudButton>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AppRegistration" Color="Color.Secondary" OnClick="@ToRegister">Sign Up</MudButton>
+            </div>
+            
+        </MudPaper>
+    </MudItem>
+    <MudItem>
+
+    </MudItem>
+</MudGrid>
+@code {
+
+    private Models.UserLoginDto loginDto = new();
+    private bool IsValid;
+    private MudForm form;
+    UserLoginValidator loginValidator = new();
+
+    private bool processing = false;
+
+    private string errorMessage = "";
+
+    private async Task Submit(){
+        processing = true;
+        try{
+            var client = new HttpClient();
+            client.BaseAddress = new Uri("https://localhost:7160");
+
+            var response = await client.PostAsync("api/user/login", new StringContent(loginDto.ToJson(), Encoding.UTF8, "application/json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+                var tokenDto = JsonConvert.DeserializeObject<UserTokenDto>(json);
+
+                await Cookie.SetValue("Authorization", tokenDto.Token);
+
+                NavigationManager.NavigateTo("/forum", true);
+            }
+            else
+            {
+                errorMessage = "Invalid login or password";
+            }
+        }
+        finally{
+            processing = false;
+        }
+
+        
+    } 
+
+    private async Task ToRegister(){
+        NavigationManager.NavigateTo("/register");
+    }
+
+    
+
+}
