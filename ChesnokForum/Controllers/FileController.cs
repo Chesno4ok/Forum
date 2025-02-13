@@ -9,7 +9,7 @@ using File = Forum.Logic.Models.File;
 
 namespace Forum.API.Controllers
 {
-    [Route("api/files")]
+    [Route("api/file")]
     [ApiController]
     [Authorize]
     public class FileController(FileService fileService, AuthService authService) : ControllerBase

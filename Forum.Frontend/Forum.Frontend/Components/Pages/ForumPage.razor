@@ -1,47 +1,57 @@
 ﻿@page "/forum"
 @using Forum.API.DTO.Posts
+@using Forum.Frontend.Components.Controls
 @using Forum.Frontend.Services
 @using Forum.Logic.Models
 @using Newtonsoft.Json
 @inject ICookie Cookie
 @inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
 @rendermode RenderMode.InteractiveServer
 
-<h3>ForumPage</h3>
-<div>@token</div>
-<button onclick="@CreatePost">Create post</button>
-
-@foreach(var post in @posts){
+<div class="d-flex flex-column justify-content-center">
+    <h3>Chesno4ok's Forum</h3>
     <div>
-        @post.Tile
+        <MudButton Variant="Variant.Filled" OnClick="@CreatePost">Create new post</MudButton>
     </div>
-}
+</div>
+
+<MudGrid Justify="Justify.Center">
+    @foreach (var post in @posts)
+    {
+        <MudItem xs="7">
+            <MudPaper>
+                <PostCard post="@post" />
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
 
 @code {
     private string token = "";
     private HttpClient client;
     private List<PostResponseDto>? posts { get; set; } = new List<PostResponseDto>();
 
-
-    protected override async Task OnParametersSetAsync()
-    {
-        
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        token = await Cookie.GetValue("Authorization");
+        if (!firstRender)
+            return;
+
         client = ClientFactory.CreateClient("backend");
+        token = await Cookie.GetValue("Authorization");
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+        await base.OnParametersSetAsync();
 
         posts.Clear();
         GetAllPosts();
-
-        await base.OnParametersSetAsync();
+        posts.OrderBy(i => i.PublicationDate);
+        StateHasChanged();
     }
 
-    private void GetAllPosts(){
-
+    private void GetAllPosts()
+    {
         var response =  client.GetAsync("api/post/get_all").Result;
 
         var json =  response.Content.ReadAsStringAsync().Result;
@@ -50,17 +60,12 @@
         this.posts = new List<PostResponseDto>(posts);
     }
 
-    public async Task CreatePost(){
+    private async Task CreatePost()
+    {
+
         
-        var response = await client.PostAsJsonAsync<PostCreationDto>("api/post/create", new PostCreationDto()
-            {
-                Tile = "Post Tite",
-                Body = "Body fdasdsfsdfasdaf"
-            });
-
-            var sdfdsf = response.Content.ReadAsStringAsync();
-
-
+        NavigationManager.NavigateTo("/newpost");
     }
 
+    
 }

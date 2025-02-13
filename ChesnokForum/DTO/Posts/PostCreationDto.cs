@@ -11,7 +11,5 @@ namespace Forum.API.DTO.Posts
         [Required]
         [StringLength(int.MaxValue, MinimumLength = 5)]
         public string Body { get; set; } = null!;
-
-
     }
 }

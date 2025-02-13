@@ -1,0 +1,57 @@
+﻿@using Forum.API.DTO.Files
+@using Forum.API.DTO.Posts
+@using Forum.Frontend.Services
+@using Newtonsoft.Json
+@rendermode RenderMode.InteractiveServer
+@inject IHttpClientFactory ClientFactory
+@inject ICookie Cookie
+
+
+<MudCard>
+    
+    @if(!string.IsNullOrEmpty(fileName)){
+        <MudCardMedia Image="@fileName"/>
+    }
+    <MudCardContent>
+        <MudText Typo="Typo.h5">@post.Tile</MudText>
+        <MudText Typo="Typo.body2">@post.PublicationDate.ToLocalTime().ToString("f")</MudText>
+        <MudText Typo="Typo.subtitle1">@post.Body</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text">Read more...</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter]
+    public PostResponseDto post{ get; set; }
+
+    private string fileName = "";
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        string[] imgExt = new string[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".svg", ".ico", ".heic", ".heif", ".avif", ".raw", ".psd", ".ai", ".eps" };
+
+
+        var client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.GetAsync($"api/file/get_by_post?postId={post.Id}");
+        var json = await response.Content.ReadAsStringAsync();
+
+        var files = JsonConvert.DeserializeObject<IList<FileResponseDto>>(json);
+        var image = files.FirstOrDefault(fl => imgExt.Any(ext => ext == fl.FileExtension));
+
+        if(image is not null){
+            fileName = $"images/{image.Id}{image.FileExtension}";
+            await File.WriteAllBytesAsync("wwwroot/" + fileName, image.Binary);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,125 @@
+﻿@using Forum.API.DTO.Files
+@using Forum.API.DTO.Posts
+@using Forum.Frontend.Services
+@using Newtonsoft.Json
+@using NuGet.Protocol
+@using System.ComponentModel.DataAnnotations
+@page "/newpost"
+@inject NavigationManager NavigationManager
+@rendermode RenderMode.InteractiveServer
+@inject IHttpClientFactory ClientFactory
+@inject ICookie Cookie
+
+<h3 class="h-100 d-flex p-2 align-items-center justify-content-center">Create a new post</h3>
+
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="5">
+        <MudTextField @bind-Value="@post.Tile"
+        For="@(() => @post.Tile)"
+        Immediate="true"
+        Label="Post title"
+        Variant="Variant.Text"
+        HelperText="An interesting title"
+        class="d-flex p-2" />
+        <MudTextField @bind-Value="@post.Body"
+        Variant="Variant.Outlined"
+
+        Lines="3"
+        For="@(() => @post.Body)"
+        Immediate="true"
+        Label="Enter text"
+        HelperText="Tell us something interesting"
+        class="d-flex p-2" />
+
+
+        <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="UploadFile" MaximumFileCount="100">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Filled"
+                Color="Color.Primary"
+                StartIcon="@Icons.Material.Filled.CloudUpload">
+                    Only image files
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
+        @if (files != null)
+        {
+            <MudList T="string">
+                @foreach (var file in files)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.AttachFile" OnClick="() => files.Remove(file)">
+                        @file.Name
+                    </MudListItem>
+                }
+            </MudList>
+        }
+
+        <MudButton OnClick="@CreatePost" Variant="Variant.Filled" Color="Color.Primary">Create post</MudButton>
+        <MudButton OnClick="@Return" Variant="Variant.Filled" Color="Color.Secondary">Return</MudButton>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private PostCreationDto post = new();
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+
+
+    private async Task CreatePost()
+    {
+        ValidationContext validationContext = new(post);
+
+        if (!Validator.TryValidateObject(post, validationContext, new List<ValidationResult>())){
+            return;
+        }
+
+        var client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.PostAsync("api/post/create",
+                new StringContent(post.ToJson(), System.Text.Encoding.UTF8, "application/json"));
+
+        var json = await response.Content.ReadAsStringAsync();
+        var newPost = JsonConvert.DeserializeObject<PostResponseDto>(json);
+
+        if (response.IsSuccessStatusCode)
+        {
+            foreach (var file in files)
+            {
+                using var stream = file.OpenReadStream();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+
+                var fileDto = new FileCreationDto()
+                    {
+                        FileExtension = Path.GetExtension(file.Name),
+                        PostId = newPost.Id,
+                        Binary = memoryStream.ToArray()
+                    };
+
+
+
+                json = System.Text.Json.JsonSerializer.Serialize<FileCreationDto>(fileDto);
+
+                response = await client.PostAsync("api/file/upload",
+                    new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
+
+
+            }
+        }
+
+
+        NavigationManager.NavigateTo("/forum");
+
+    }
+
+    private async Task UploadFile(IBrowserFile file)
+    {
+        files.Add(file);
+    }
+    private async Task Return()
+    {
+        NavigationManager.NavigateTo("/forum");
+    }
+
+}

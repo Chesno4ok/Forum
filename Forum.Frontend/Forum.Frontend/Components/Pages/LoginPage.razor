@@ -55,7 +55,7 @@
                 </MudButton>
                 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AppRegistration" Color="Color.Secondary" OnClick="@ToRegister">Sign Up</MudButton>
             </div>
-            
+
         </MudPaper>
     </MudItem>
     <MudItem>
@@ -73,8 +73,31 @@
 
     private string errorMessage = "";
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var token = await Cookie.GetValue("Authorization");
+        if (token is not null && await IsLogin())
+        {
+            NavigationManager.NavigateTo("/forum", true, true);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task<bool> IsLogin(){
+        var client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.GetAsync("isLogin");
+
+        
+
+        return response.IsSuccessStatusCode;
+    }
+
     private async Task Submit(){
         processing = true;
+
         try{
             var client = new HttpClient();
             client.BaseAddress = new Uri("https://localhost:7160");
@@ -88,7 +111,7 @@
 
                 await Cookie.SetValue("Authorization", tokenDto.Token);
 
-                NavigationManager.NavigateTo("/forum", true);
+                NavigationManager.NavigateTo("/forum",true, true);
             }
             else
             {

@@ -60,6 +60,10 @@ public class Program
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
 
+        app.MapBlazorHub(Directory.GetCurrentDirectory());
+
+
+
         app.Run();
     }
 }
