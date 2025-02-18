@@ -9,23 +9,26 @@
 @inject NavigationManager NavigationManager
 @rendermode RenderMode.InteractiveServer
 
-<div class="d-flex flex-column justify-content-center">
-    <h3>Chesno4ok's Forum</h3>
-    <div>
-        <MudButton Variant="Variant.Filled" OnClick="@CreatePost">Create new post</MudButton>
-    </div>
-</div>
+<div style="width:1000px;margin-left:auto;margin-right:auto">
 
-<MudGrid Justify="Justify.Center">
-    @foreach (var post in @posts)
-    {
-        <MudItem xs="7">
-            <MudPaper>
-                <PostCard post="@post" />
-            </MudPaper>
+    <MudGrid Justify="Justify.FlexStart" Style="margin-left:auto;margin-right:auto">
+        <MudItem Style="margin-left:0px">
+            <div>
+                <h3>Chesno4ok's Forum</h3>
+                <MudButton Variant="Variant.Filled" OnClick="@CreatePost">Create new post</MudButton>
+                <MudButton Variant="Variant.Filled" OnClick="@Leave">Leave</MudButton>
+            </div>
         </MudItem>
-    }
-</MudGrid>
+        @foreach (var post in @posts)
+        {
+            <MudItem xs="10">
+                <MudPaper>
+                    <PostCard post="@post" />
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</div>
 
 
 @code {
@@ -62,10 +65,11 @@
 
     private async Task CreatePost()
     {
-
-        
         NavigationManager.NavigateTo("/newpost");
     }
 
-    
+    private async Task Leave(){
+        await Cookie.SetValue("Authorization", "");
+        NavigationManager.NavigateTo("/");
+    }
 }

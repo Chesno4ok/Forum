@@ -36,28 +36,35 @@ namespace Forum.Persistance
         public async Task<User?> Get(Guid id)
         {
             var jsonString = await _cache.GetStringAsync($"user-{id.ToString()}");
-            User? post = null;
+            User? user = null;
 
             if (jsonString != null)
             {
-                post = JsonConvert.DeserializeObject<User>(jsonString);
+                user = JsonConvert.DeserializeObject<User>(jsonString);
             }
             else
             {
-                post = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == id);
+                try
+                {
+                    user = await _forumContext.Users.FirstOrDefaultAsync(i => i.Id == id);
+                }
+                catch(Exception e)
+                {
 
-                if (post is null)
+                }
+
+                if (user is null)
                     return null;
 
-                jsonString = post.ToJson();
+                jsonString = user.ToJson();
 
-                await cache.SetStringAsync($"user-{post.Id.ToString()}", jsonString, new DistributedCacheEntryOptions
+                await cache.SetStringAsync($"user-{user.Id.ToString()}", jsonString, new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
                 });
             }
 
-            return post;
+            return user;
         }
 
         public async Task Save()

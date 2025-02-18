@@ -5,12 +5,13 @@
 @rendermode RenderMode.InteractiveServer
 @inject IHttpClientFactory ClientFactory
 @inject ICookie Cookie
+@inject NavigationManager NavigationManager
 
 
 <MudCard>
-    
+
     @if(!string.IsNullOrEmpty(fileName)){
-        <MudCardMedia Image="@fileName"/>
+        <MudCardMedia Image="@fileName" Height="500"/>
     }
     <MudCardContent>
         <MudText Typo="Typo.h5">@post.Tile</MudText>
@@ -18,7 +19,7 @@
         <MudText Typo="Typo.subtitle1">@post.Body</MudText>
     </MudCardContent>
     <MudCardActions>
-        <MudButton Variant="Variant.Text">Read more...</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="@ReadMore">Read more...</MudButton>
     </MudCardActions>
 </MudCard>
 
@@ -53,5 +54,9 @@
 
         await base.OnAfterRenderAsync(firstRender);
         StateHasChanged();
+    }
+
+    public void ReadMore(){
+        NavigationManager.NavigateTo($"/post/{post.Id}");
     }
 }

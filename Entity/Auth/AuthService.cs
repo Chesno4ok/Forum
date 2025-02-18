@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace Forum.Application.Auth
 {
-    // TODO: ADD SALT
     public class AuthService
     {
         public static JwtSecurityToken CreateToken(Guid userId)

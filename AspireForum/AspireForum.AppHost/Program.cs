@@ -21,9 +21,9 @@ var api = builder.AddProject<Forum_API>("forum-api")
     .WithReference(postgres)
     .WithReference(postgresdb);
 
-//builder.AddProject<Projects.Forum_MigrationService>("forum-migrationservice")
-//    .WithReference(postgresdb)
-//    .WithReference(postgres);
+builder.AddProject<Projects.Forum_MigrationService>("forum-migrationservice")
+    .WithReference(postgresdb)
+    .WithReference(postgres);
 
 // etc
 

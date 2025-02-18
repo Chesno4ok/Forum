@@ -1,5 +1,6 @@
 using Forum.Frontend.Client.Pages;
 using Forum.Frontend.Components;
+using Forum.Frontend.Middlewares;
 using Forum.Frontend.Services;
 using MudBlazor;
 using MudBlazor.Services;
@@ -35,6 +36,9 @@ public class Program
 
         var app = builder.Build();
 
+        
+
+
         app.MapDefaultEndpoints();
 
         // Configure the HTTP request pipeline.
@@ -50,8 +54,6 @@ public class Program
 
         app.UseHttpsRedirection();
 
-        
-
         app.UseAntiforgery();
 
         app.MapStaticAssets();
@@ -63,7 +65,7 @@ public class Program
         app.MapBlazorHub(Directory.GetCurrentDirectory());
 
 
-
+        //app.UseMiddleware<AuthMiddleware>();
         app.Run();
     }
 }

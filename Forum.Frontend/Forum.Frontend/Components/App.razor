@@ -1,6 +1,9 @@
 ﻿@using Forum.API.DTO.Users
 @using Forum.Frontend.Components.Pages
+@using Forum.Frontend.Services
 @inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+@inject ICookie Cookie
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,15 +23,15 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
     @* Required *@
-    
+
 </head>
 
 <body>
-        <Router AppAssembly="@typeof(Program).Assembly">
-            <Found Context="routeData">
-                <RouteView RouteData="routeData" />
-            </Found>
-        </Router>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" />
+        </Found>
+    </Router>
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 
@@ -52,5 +55,29 @@
     }
 
 
-    
+    private static string[] anonEndpoints = new string[] { "/login", "/register", "", "/" };
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.GetAsync("/isLogin");
+
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var pathString = NavigationManager.Uri;
+
+
+        if (anonEndpoints.Any(i => i == pathString))
+            return;
+        else
+            NavigationManager.NavigateTo("/401");
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
 }

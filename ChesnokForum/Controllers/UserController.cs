@@ -8,6 +8,7 @@ using Forum.Application.Auth;
 using Forum.API.Attributes.ValidationAttriubtes;
 using Forum.Persistance;
 using Forum.Logic.Repository;
+using Forum.Logic.Models;
 
 
 namespace Forum.API.Controllers
@@ -76,7 +77,12 @@ namespace Forum.API.Controllers
         }
 
         [HttpGet("/isLogin")]
-        public IActionResult IsLogin() => Ok();
+        public async Task<IActionResult> IsLogin()
+        {
+            var userId = Guid.Parse(_authService.GetId(HttpContext.Request.Headers.First(i => i.Key == "Authorization").Value));
+            var user = await _userService.GetUser(userId);
+            return user is null ? BadRequest() : Ok();
+        }
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userDto)

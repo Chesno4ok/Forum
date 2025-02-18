@@ -1,0 +1,113 @@
+﻿@using Forum.API.DTO
+@using Forum.API.DTO.Comments
+@using Forum.API.DTO.Users
+@using Forum.Frontend.Models
+@using Forum.Frontend.Services
+@using Newtonsoft.Json
+@using NuGet.Protocol
+@rendermode RenderMode.InteractiveServer
+@inject IHttpClientFactory ClientFactory
+@inject ICookie Cookie
+
+
+<MudCard Elevation="0"
+         style="width:100%"
+         Outlined="true">
+    <MudCardContent>
+        <MudText Typo="Typo.h5">@author.Name</MudText>
+        <div class="text-break">@comment.Data.Body</div>
+        @if (isReplyOpen)
+        {
+            <MudTextField HelperText="Write your comment"
+            AdornmentIcon="@Icons.Material.Filled.Send"
+            OnAdornmentClick="@Reply"
+            Variant="Variant.Filled"
+            Lines="2"
+            Adornment="Adornment.End"
+            AutoFocus=true
+            Label="Reply"
+
+            @bind-Value="replyBody" />
+
+            <MudButton EndIcon="@Icons.Material.Filled.Cancel" OnClick="() => isReplyOpen = false">Cancel</MudButton>
+        }
+
+    </MudCardContent>
+    <MudCardActions>
+        @if (!isReplyOpen)
+        {
+            <MudButton  Variant="Variant.Text" OnClick="@OpenReply">Reply</MudButton>
+        }
+    </MudCardActions>
+</MudCard>
+<MudExpansionPanels Elevation="0" Outlined="true">
+    <MudExpansionPanel Text="Replies" 
+    Disabled="comment.Responses.Count == 0">
+        @foreach (var comment in comment.Responses)
+        {
+            <MudFlexBreak />
+            if (comment is not null)
+            {
+                <CommentCard comment="@comment" />
+
+            }
+
+
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    [Parameter]
+    public Comment comment{ get; set; }
+    private UserResponseDto? author = new UserResponseDto();
+
+    private bool isReplyOpen = false;
+    private string replyBody = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        using HttpClient client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.GetAsync($"api/user/{comment.Data.UserId}");
+        var json = await response.Content.ReadAsStringAsync();
+        author = JsonConvert.DeserializeObject<UserResponseDto>(json);
+
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task Reply(){
+        using HttpClient client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var commentDto = new CommentCreationDto()
+            {
+                Body = replyBody,
+                PostId = (Guid)comment.Data.PostId,
+                CommentId = (Guid)comment.Data.Id
+            };
+
+        var response = await client.PostAsync("api/comment/create",
+        new StringContent(commentDto.ToJson(), System.Text.Encoding.UTF8, "application/json"));
+
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        var json = await response.Content.ReadAsStringAsync();
+        var commentResponse = JsonConvert.DeserializeObject<CommentResponseDto>(json);
+
+        comment.Responses.Add(new Comment(commentResponse));
+        replyBody = "";
+        isReplyOpen = false;
+        StateHasChanged();
+    }
+    private async Task OpenReply(){
+        isReplyOpen = true;
+    }
+
+}

@@ -1,0 +1,224 @@
+﻿@rendermode RenderMode.InteractiveServer
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory ClientFactory
+@page "/post/{PostId}"
+@using Forum.API.DTO
+@using Forum.API.DTO.Comments
+@using Forum.API.DTO.Files
+@using Forum.API.DTO.Posts
+@using Forum.Frontend.Components.Controls
+@using Forum.Frontend.Models
+@using Forum.Frontend.Services
+@using Newtonsoft.Json
+@using NuGet.Protocol
+@inject ICookie Cookie
+
+<div class="d-flex align-self-center" style="width:1000px;margin-left:auto;margin-right:auto">
+    <MudGrid Class="d-flex align-self-center" style="margin-left:auto; margin-right:auto">
+        <MudItem xs="10">
+            <MudButton Variant="Variant.Text" OnClick="@ReturnToForum">Return</MudButton>
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">@post.Tile</MudText>
+                    <MudText Typo="Typo.body2">@post.PublicationDate.ToLocalTime().ToString("f")</MudText>
+                    <MudText Typo="Typo.subtitle1">@post.Body</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        @if (images.Count > 0)
+        {
+            <MudFlexBreak />
+            <MudItem>
+                <MudCarousel SelectedIndex="0" Class="mud-width-full" Style="height:500px;width:800px" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="false" TData="object">
+                    @foreach (var image in images)
+                    {
+                        <MudCarouselItem Transition="Transition.Fade" Color="@Color.Primary">
+                            <MudImage Width="800" Height="500" ObjectFit="ObjectFit.Cover" Src="@image" Alt="Mony the dog" Elevation="25" Class="rounded-lg" />
+
+                        </MudCarouselItem>
+                    }
+
+                </MudCarousel>
+            </MudItem>
+        }
+
+        <MudFlexBreak />
+        <MudItem xs="10">
+            <MudTextField Lines="3"
+                          Variant="Variant.Filled"
+                          @bind-Value="commentBody"
+                          AdornmentIcon="@Icons.Material.Filled.Send"
+                          HelperText="Enter your comment"
+                          OnAdornmentClick="@SendComment"
+                          Adornment="Adornment.End"
+                          Label="Comment" />
+        </MudItem>
+
+        <MudList T="string">
+            @foreach (var file in files)
+            {
+                <MudListItem Icon="@Icons.Material.Filled.AttachFile">
+                    @file.Id
+                </MudListItem>
+            }
+        </MudList>
+        <MudFlexBreak />
+        <MudItem xs="10">
+            <MudText>@commentAmount Comments:</MudText>
+            @foreach (var comment in @showComments)
+            {
+                <MudFlexBreak />
+                if (comment is not null)
+                {
+                    <CommentCard comment="@comment" />
+                }
+            }
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter]
+    public string PostId{ get; set; }
+    private Guid guid;
+    private PostResponseDto? post = new PostResponseDto();
+    private List<Comment> showComments = new();
+    private HttpClient client;
+    private string commentBody;
+    private int commentAmount = 0;
+    private List<string> images = new List<string>();
+    IList<FileResponseDto> files = new List<FileResponseDto>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+        if (!Guid.TryParse(PostId, out guid))
+            NavigationManager.NavigateTo("/404");
+
+        client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var response = await client.GetAsync($"api/post/{PostId}");
+
+        if(!response.IsSuccessStatusCode)
+            NavigationManager.NavigateTo("/404");
+
+        var json = await response.Content.ReadAsStringAsync();
+        post = JsonConvert.DeserializeObject<PostResponseDto>(json);
+
+        response = await client.GetAsync($"api/comment/get_by_post/{PostId}");
+        json = await response.Content.ReadAsStringAsync();
+        var commentResponse = JsonConvert.DeserializeObject<CommentResponseDto[]>(json);
+        showComments.Clear();
+        if(commentResponse.Length != 0)
+            await ArrangeComments(commentResponse);
+
+        await DownloadFiles();
+
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task ArrangeComments(CommentResponseDto[] comments){
+
+        var commentsList = comments.OrderBy(i => i.CommentId).ToList();
+        commentAmount = comments.Count();
+
+        foreach (var comment in comments.Where(i => i.CommentId is  null))
+        {
+            showComments.Add(new Comment(comment));
+            commentsList.Remove(comment);
+        }
+
+
+        while(commentsList.Count > 0){
+
+            var replies = commentsList.Where(i => i.CommentId is not null).ToList();
+            foreach (var comment in replies)
+            {
+
+                var result = FindComment(showComments, (Guid)comment.CommentId!);
+
+                if (result is not null)
+                {
+                    result.Responses.Add(new Comment(comment));
+                    commentsList.Remove(comment);
+                }
+            }
+        }
+    }
+
+    private Comment? FindComment(List<Comment> comments, Guid id){
+        var nextComments = new List<Comment>();
+
+        foreach(var comment in comments){
+            if (comment.Data.Id == id)
+                return comment;
+            if (comment.Responses.Count != 0)
+                nextComments.AddRange(comment.Responses);
+        }
+
+        if (nextComments.Count == 0)
+            return null;
+
+        return FindComment(nextComments, id) ?? null;
+    }
+
+    private async Task DownloadFiles(){
+        string[] imgExt = new string[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".svg", ".ico", ".heic", ".heif", ".avif", ".raw", ".psd", ".ai", ".eps" };
+
+        var response = await client.GetAsync($"api/file/get_by_post?postId={post.Id}");
+        var json = await response.Content.ReadAsStringAsync();
+        var files = JsonConvert.DeserializeObject<IList<FileResponseDto>>(json);
+
+        var images = new List<string>();
+        foreach(var file in files){
+            if (imgExt.Any(i => i == file.FileExtension))
+            {
+                var fileName = $"images/{file.Id}{file.FileExtension}";
+                await File.WriteAllBytesAsync("wwwroot/" + fileName, file.Binary);
+                images.Add(fileName);
+            }
+        }
+
+        this.images = images;
+        StateHasChanged();
+    }
+
+    private void ReturnToForum(){
+        NavigationManager.NavigateTo("/forum");
+    }
+
+    private async Task SendComment()
+    {
+        using HttpClient client = ClientFactory.CreateClient("backend");
+        await client.SetCookie(Cookie);
+
+        var commentDto = new CommentCreationDto()
+            {
+                Body = commentBody,
+                PostId = post.Id
+            };
+
+        var response = await client.PostAsync("api/comment/create", 
+        new StringContent(commentDto.ToJson(), System.Text.Encoding.UTF8, "application/json"));
+        var zalupa = response.Content.ReadAsStringAsync();
+        commentBody = "";
+
+         response = await client.GetAsync($"api/comment/get_by_post/{PostId}");
+        var json = await response.Content.ReadAsStringAsync();
+
+        var commentResponse = JsonConvert.DeserializeObject<CommentResponseDto[]>(json);
+        if (commentResponse.Length != 0)
+        {
+            showComments.Clear();
+            await ArrangeComments(commentResponse);
+        }
+
+    }
+
+
+}
+
+
