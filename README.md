@@ -43,6 +43,12 @@
   **Решение:** Подождите, пока запустится контейнер, и перезапустите `MigrationService`.
 
 ---
+![Aspire](https://github.com/user-attachments/assets/26c079ee-d806-4b01-91d6-82ad41e3bb00)
+![Scalar](https://github.com/user-attachments/assets/c6c0323f-adfa-41e5-bbe9-64829dae3e77)
+![Frontend](https://github.com/user-attachments/assets/e9c10696-2f56-42f2-b14d-824f313a759d)
+![Post](https://github.com/user-attachments/assets/9f8310f3-18e6-4ff2-9690-d9f3088eb9e0)
+
+
 
 ## Ссылки на технологии:
 
