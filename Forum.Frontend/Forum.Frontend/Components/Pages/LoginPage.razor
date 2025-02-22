@@ -1,7 +1,11 @@
 ﻿@using Forum.API.DTO.Users
+@using Forum.Frontend.Extensions
 @using Forum.Frontend.Models
 @using Forum.Frontend.Services
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Web
+@using System.Security.Claims;
 @using MudBlazor
 @using Newtonsoft.Json
 @using NuGet.Protocol
@@ -13,6 +17,8 @@
 @using FluentValidation
 @inject ISnackbar Snackbar
 @inject ICookie Cookie;
+@inject IHttpContextAccessor context;
+
 <h1 class="h-100 d-flex p-2 align-items-center justify-content-center">Chesnok Forum</h1>
 
 <style>
@@ -85,12 +91,12 @@
     }
 
     private async Task<bool> IsLogin(){
-        var client = ClientFactory.CreateClient("backend");
+        using var client = ClientFactory.CreateClient("backend");
         await client.SetCookie(Cookie);
 
         var response = await client.GetAsync("isLogin");
 
-        
+
 
         return response.IsSuccessStatusCode;
     }
@@ -99,8 +105,7 @@
         processing = true;
 
         try{
-            var client = new HttpClient();
-            client.BaseAddress = new Uri("https://localhost:7160");
+            using var client = ClientFactory.CreateClient("backend");
 
             var response = await client.PostAsync("api/user/login", new StringContent(loginDto.ToJson(), Encoding.UTF8, "application/json"));
 
@@ -109,9 +114,11 @@
                 string json = await response.Content.ReadAsStringAsync();
                 var tokenDto = JsonConvert.DeserializeObject<UserTokenDto>(json);
 
-                await Cookie.SetValue("Authorization", tokenDto.Token);
+                await Cookie.SetValue("ApiAuthorization", tokenDto.Token);
 
-                NavigationManager.NavigateTo("/forum",true, true);
+                
+
+                NavigationManager.NavigateTo("/authorize", true, true);
             }
             else
             {
@@ -122,6 +129,7 @@
             processing = false;
         }
 
+       
         
     } 
 

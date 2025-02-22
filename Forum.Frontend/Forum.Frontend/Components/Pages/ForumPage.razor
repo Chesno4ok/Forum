@@ -1,13 +1,17 @@
 ﻿@page "/forum"
+@using Forum.Frontend.Extensions
 @using Forum.API.DTO.Posts
 @using Forum.Frontend.Components.Controls
 @using Forum.Frontend.Services
 @using Forum.Logic.Models
+@using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json
 @inject ICookie Cookie
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager NavigationManager
 @rendermode RenderMode.InteractiveServer
+@attribute [Authorize]
+
 
 <div style="width:1000px;margin-left:auto;margin-right:auto">
 
@@ -19,14 +23,21 @@
                 <MudButton Variant="Variant.Filled" OnClick="@Leave">Leave</MudButton>
             </div>
         </MudItem>
-        @foreach (var post in @posts)
-        {
-            <MudItem xs="10">
-                <MudPaper>
-                    <PostCard post="@post" />
-                </MudPaper>
-            </MudItem>
+        @if(posts is not null){
+            @foreach (var post in @posts)
+            {
+                <MudItem xs="10">
+                    <MudPaper>
+                        <PostCard post="@post" />
+                    </MudPaper>
+                </MudItem>
+            }
         }
+        else{
+            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+            <MudText Class="ms-2">Loading</MudText>
+        }
+
     </MudGrid>
 </div>
 
@@ -42,8 +53,7 @@
             return;
 
         client = ClientFactory.CreateClient("backend");
-        token = await Cookie.GetValue("Authorization");
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+        await client.SetCookie(Cookie);
 
         await base.OnParametersSetAsync();
 
@@ -63,13 +73,15 @@
         this.posts = new List<PostResponseDto>(posts);
     }
 
-    private async Task CreatePost()
+    private void CreatePost()
     {
         NavigationManager.NavigateTo("/newpost");
     }
 
     private async Task Leave(){
-        await Cookie.SetValue("Authorization", "");
-        NavigationManager.NavigateTo("/");
+        await Cookie.SetValue("ApiAuthorization", "");
+        
+
+        NavigationManager.NavigateTo("/logout");
     }
 }

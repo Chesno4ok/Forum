@@ -1,5 +1,6 @@
 ﻿@using Forum.API.DTO.Users
 @using Forum.Frontend.Components.Pages
+@using Forum.Frontend.Extensions
 @using Forum.Frontend.Services
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory ClientFactory
@@ -50,7 +51,7 @@
 @code{
     bool isLogin = false;
 
-    public async Task OnLogin(UserTokenDto token){
+    public void OnLogin(UserTokenDto token){
         NavigationManager.NavigateTo("/forum");
     }
 
@@ -58,7 +59,7 @@
     private static string[] anonEndpoints = new string[] { "/login", "/register", "", "/" };
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var client = ClientFactory.CreateClient("backend");
+        using var client = ClientFactory.CreateClient("backend");
         await client.SetCookie(Cookie);
 
         var response = await client.GetAsync("/isLogin");

@@ -1,6 +1,7 @@
 ﻿@using Forum.API.DTO
 @using Forum.API.DTO.Comments
 @using Forum.API.DTO.Users
+@using Forum.Frontend.Extensions
 @using Forum.Frontend.Models
 @using Forum.Frontend.Services
 @using Newtonsoft.Json
@@ -11,8 +12,8 @@
 
 
 <MudCard Elevation="0"
-         style="width:100%"
-         Outlined="true">
+style="width:100%"
+Outlined="true">
     <MudCardContent>
         <MudText Typo="Typo.h5">@author.Name</MudText>
         <div class="text-break">@comment.Data.Body</div>
@@ -100,6 +101,9 @@
 
         var json = await response.Content.ReadAsStringAsync();
         var commentResponse = JsonConvert.DeserializeObject<CommentResponseDto>(json);
+
+        if (commentResponse is null)
+            return;
 
         comment.Responses.Add(new Comment(commentResponse));
         replyBody = "";

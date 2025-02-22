@@ -11,10 +11,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace Forum.Frontend.Services
 {
-    // TODO: ADD SALT
     public class AuthService
     {
         public static JwtSecurityToken CreateToken(string token)

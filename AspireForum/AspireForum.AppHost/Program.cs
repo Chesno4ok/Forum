@@ -5,17 +5,17 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Services
 
-// Redis
+// Caching
 var cache = builder.AddRedis("cache", 6379)
     .WithRedisInsight();
 
-// Postgres
+// Database
 var postgres = builder.AddPostgres("postgres", port: 5432);
 var postgresdb = postgres.AddDatabase("postgresDb");
 
 
 
-// Projects
+// Backend
 var api = builder.AddProject<Forum_API>("forum-api")
     .WithReference(cache)
     .WithReference(postgres)
@@ -25,21 +25,11 @@ builder.AddProject<Projects.Forum_MigrationService>("forum-migrationservice")
     .WithReference(postgresdb)
     .WithReference(postgres);
 
-// etc
 
 
+// Frontend
 
-
-// etc
-
-// etc
-
-
-
-
-// etc
-
-//builder.AddProject<Projects.Forum_Frontend>("forum-frontend");
+builder.AddProject<Projects.Forum_Frontend>("forum-frontend");
 
 // etc
 

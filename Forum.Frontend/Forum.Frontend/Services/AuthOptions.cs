@@ -6,7 +6,7 @@ namespace Forum.Frontend.Services
 {
     public class AuthOptions
     {
-        public const string ISSUER = "Forum.API";
+        public const string ISSUER = "Forum.Frontend";
         public const string AUDIENCE = "ForumUser";
         public const string KEY = "mysupersecret_secretsecretsecretkey!123";
         public static SymmetricSecurityKey GetSymmetricSecurityKey() =>

@@ -2,17 +2,19 @@
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory ClientFactory
 @page "/post/{PostId}"
+@using Forum.API.DTO.Files
 @using Forum.API.DTO
 @using Forum.API.DTO.Comments
-@using Forum.API.DTO.Files
 @using Forum.API.DTO.Posts
 @using Forum.Frontend.Components.Controls
+@using Forum.Frontend.Extensions
 @using Forum.Frontend.Models
 @using Forum.Frontend.Services
+@using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json
 @using NuGet.Protocol
 @inject ICookie Cookie
-
+@attribute [Authorize]
 <div class="d-flex align-self-center" style="width:1000px;margin-left:auto;margin-right:auto">
     <MudGrid Class="d-flex align-self-center" style="margin-left:auto; margin-right:auto">
         <MudItem xs="10">
@@ -112,7 +114,7 @@
         var commentResponse = JsonConvert.DeserializeObject<CommentResponseDto[]>(json);
         showComments.Clear();
         if(commentResponse.Length != 0)
-            await ArrangeComments(commentResponse);
+             ArrangeComments(commentResponse);
 
         await DownloadFiles();
 
@@ -120,7 +122,7 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    private async Task ArrangeComments(CommentResponseDto[] comments){
+    private void ArrangeComments(CommentResponseDto[] comments){
 
         var commentsList = comments.OrderBy(i => i.CommentId).ToList();
         commentAmount = comments.Count();
@@ -213,7 +215,7 @@
         if (commentResponse.Length != 0)
         {
             showComments.Clear();
-            await ArrangeComments(commentResponse);
+             ArrangeComments(commentResponse);
         }
 
     }

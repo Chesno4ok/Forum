@@ -1,6 +1,8 @@
 ﻿@using Forum.API.DTO.Files
 @using Forum.API.DTO.Posts
+@using Forum.Frontend.Extensions
 @using Forum.Frontend.Services
+@using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json
 @using NuGet.Protocol
 @using System.ComponentModel.DataAnnotations
@@ -9,7 +11,7 @@
 @rendermode RenderMode.InteractiveServer
 @inject IHttpClientFactory ClientFactory
 @inject ICookie Cookie
-
+@attribute [Authorize]
 <h3 class="h-100 d-flex p-2 align-items-center justify-content-center">Create a new post</h3>
 
 <MudGrid Justify="Justify.Center">
@@ -73,7 +75,7 @@
             return;
         }
 
-        var client = ClientFactory.CreateClient("backend");
+        using var client = ClientFactory.CreateClient("backend");
         await client.SetCookie(Cookie);
 
         var response = await client.PostAsync("api/post/create",
@@ -113,11 +115,11 @@
 
     }
 
-    private async Task UploadFile(IBrowserFile file)
+    private void UploadFile(IBrowserFile file)
     {
         files.Add(file);
     }
-    private async Task Return()
+    private void Return()
     {
         NavigationManager.NavigateTo("/forum");
     }

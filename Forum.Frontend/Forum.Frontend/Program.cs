@@ -1,9 +1,15 @@
 using Forum.Frontend.Client.Pages;
 using Forum.Frontend.Components;
-using Forum.Frontend.Middlewares;
+using Forum.Frontend.Extensions;
 using Forum.Frontend.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using MudBlazor;
 using MudBlazor.Services;
+using System.Security.Claims;
 
 
 namespace Forum.Frontend;
@@ -19,23 +25,11 @@ public class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
-
-        builder.Services.AddScoped<ICookie, Cookie>();
-
-        builder.Services.AddHttpClient("backend", client =>
-        {
-            client.BaseAddress = new Uri("https://localhost:7160/");
-
-        });
-
-        builder.Services.AddMudServices(config =>
-        {
-            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
-
-        });
+        builder.SetServices();
+        
 
         var app = builder.Build();
-
+        app.SetEndpoints();
         
 
 
@@ -65,7 +59,15 @@ public class Program
         app.MapBlazorHub(Directory.GetCurrentDirectory());
 
 
-        //app.UseMiddleware<AuthMiddleware>();
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseCookiePolicy(
+            new CookiePolicyOptions
+            {
+                Secure = CookieSecurePolicy.Always
+            });
+
         app.Run();
     }
 }

@@ -76,35 +76,35 @@
     private async Task Submit()
     {
         processing = true;
-        try{
+        try
+        {
             ValidationContext validationContext = new(registerDto);
             valResults.Clear();
             status = "";
 
-            if (Validator.TryValidateObject(registerDto, validationContext, valResults, true))
+            if (!Validator.TryValidateObject(registerDto, validationContext, valResults, true))
             {
-                var client = ClientFactory.CreateClient("backend");
-                var response = await client.PostAsync("api/user/register",
-                new StringContent(registerDto.ToJson(), System.Text.Encoding.UTF8, "application/json"));
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    status = await response.Content.ReadAsStringAsync() + response.StatusCode;
-                    Snackbar.Add("Error");
-                    return;
-                }
-
-                NavigationManager.NavigateTo("/login");
+                return;
             }
-            else
+
+            using var client = ClientFactory.CreateClient("backend");
+            var response = await client.PostAsync("api/user/register",
+            new StringContent(registerDto.ToJson(), System.Text.Encoding.UTF8, "application/json"));
+
+            if (!response.IsSuccessStatusCode)
             {
-                
+                status = await response.Content.ReadAsStringAsync() + response.StatusCode;
+                Snackbar.Add("Error");
+                return;
             }
+
+            NavigationManager.NavigateTo("/login");
         }
-        finally{
+        finally
+        {
             processing = false;
         }
-        
+
     }
 
     private async Task ToLogin(){
