@@ -31,7 +31,6 @@ public class Worker(
 
             await EnsureDatabaseAsync(dbContext, cancellationToken);
             await RunMigrationAsync(dbContext, cancellationToken);
-            await SeedDataAsync(dbContext, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -49,8 +48,6 @@ public class Worker(
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            // Create the database if it does not exist.
-            // Do this first so there is then a database to start a transaction against.
             try
             {
                 if (!await dbCreator.ExistsAsync(cancellationToken))
@@ -68,7 +65,20 @@ public class Worker(
 
     private static async Task RunMigrationAsync(ForumContext dbContext, CancellationToken cancellationToken)
     {
-        await dbContext.Database.MigrateAsync(cancellationToken);
+        try
+        {
+            var users = dbContext.Users.ToList();
+        }
+        catch(Exception e)
+        {
+            await dbContext.Database.MigrateAsync(cancellationToken);
+            await SeedDataAsync(dbContext, cancellationToken);
+        }
+        finally{
+            Console.WriteLine("Migration Complete");
+        }
+
+        
     }
 
     private static async Task SeedDataAsync(ForumContext dbContext, CancellationToken cancellationToken)
