@@ -18,7 +18,12 @@ namespace Forum.Frontend.Extensions
 
             builder.Services.AddHttpClient("backend", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:7160/");
+                var conString = builder.Configuration.GetConnectionString("BackendAPI");
+
+                if (conString is null)
+                    throw new Exception("Connection string to Backend is not set");
+
+                client.BaseAddress = new Uri(conString);
 
             });
             builder.Services.AddHttpContextAccessor();
